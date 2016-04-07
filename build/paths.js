@@ -1,6 +1,12 @@
+var path = require('path');
+var fs = require('fs');
+
 var appRoot = 'src/';
 var outputRoot = 'dist/';
 var exporSrvtRoot = 'export/'
+
+var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+
 
 module.exports = {
   root: appRoot,
@@ -17,5 +23,13 @@ module.exports = {
     './typings/browser/**/*.d.ts',
     './custom_typings/**/*.d.ts',
     './jspm_packages/**/*.d.ts'
-  ]
+  ],
+  dtsSrcEs6: [
+    './typings/browser/**/*.d.ts',
+    '!./typings/browser/**/*es6*/*.d.ts',
+    './custom_typings/chosen.d.ts',
+    './jspm_packages/**/*.d.ts'
+  ],
+  packageName: pkg.name,
+  packageVersion: pkg.version
 }

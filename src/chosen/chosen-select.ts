@@ -1,4 +1,7 @@
-import {bindable, inject, customElement, computedFrom, bindingMode, LogManager, BindingEngine} from 'aurelia-framework';
+import { bindable, customElement } from 'aurelia-templating';
+import { bindingMode, BindingEngine } from 'aurelia-binding';
+import * as LogManager from 'aurelia-logging';
+import { inject } from 'aurelia-dependency-injection';
 import {DOM} from 'aurelia-pal';
 
 import 'harvesthq/chosen';
