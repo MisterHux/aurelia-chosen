@@ -1,4 +1,7 @@
-# aurelia-skeleton-navigation
+# aurelia-chosen
+
+Custom element that skins a select to use [chosen](http://harvesthq.github.io/chosen).  This repo is initiall based on the aurelia-skeleton-typescript sample.
+
 
 ## Running The App
 
