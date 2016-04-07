@@ -1,0 +1,37 @@
+<template>
+  <require from="components/custom-elements/chosen/chosen-select"></require>
+  <section class="au-animate">
+    <h2>${heading}</h2>
+    <form role="form" submit.delegate="submit()">
+      <div class="form-group">
+        <label for="fn">First Name</label>
+        <input type="text" value.bind="firstName" class="form-control" id="fn" placeholder="first name">
+      </div>
+      <div class="form-group">
+        <label for="ln">Last Name</label>
+        <input type="text" value.bind="lastName" class="form-control" id="ln" placeholder="last name">
+      </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <p class="help-block">${fullName | upper}</p>
+      </div>
+      <button type="submit" class="btn btn-default">Submit</button>
+
+      
+    </form>
+        <chosen class="dropdown col-md-7 col-sm-7" 
+                       id="myDatepicker" 
+                       options.bind="items" 
+                       value.bind="item" 
+                       display-property="uniqueName" 
+                       disabled-property="hasStatus" 
+                       label="Data Items"
+                       change.delegate="myEventCallback($event)"
+                       chosen-options='no_results_text: "Oops, we got nothing!", disable_search_threshold: 3' 
+                       help-text="This is a help text to explain what to do.  Please select an item to continue."
+                       inlineForm 
+                       multiple
+                       clear></chosen>
+         <p class="help-block">${item.description}</p>
+  </section>
+</template>

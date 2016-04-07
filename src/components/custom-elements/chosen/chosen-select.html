@@ -1,0 +1,15 @@
+<template ref-id="${id}">
+  <div class="row ${inlineForm ? 'form-inline' : ''}" style="margin-top: 5px">
+    <label ref="_label" class="control-label chosen-label ${labelClasses}" innerhtml.bind="label" show.bind="!noLabel" for.bind="id"></label>
+    <div class="form-group" css="width: ${inlineForm ? '50' : '100'}%">
+      <select ref="_select" id.bind="id" name.bind="name" style="width: 100%" aria-describedby="helpBlock" placeholder="${placeholder}" value.bind="value">
+        <option value="" if.bind="!_multiple"></option>
+        <option model.bind="option" 
+                repeat.for="option of options"
+                disabled.bind="option[disabledProperty]!==null&&option[disabledProperty]!==undefined&&option[disabledProperty]" 
+                value="${option[valueProperty]!==null&&option[valueProperty]!==undefined?option[valueProperty]:option}">${option[displayProperty] || option}</option>
+      </select>
+    </div>
+    <span class="help-block" ref="_helpTextLabel" if.bind="helpText" innerhtml.bind="helpText" id="helpBlock"></span>
+  </div>
+</template>
