@@ -64,8 +64,11 @@
   },
   "jspm": {
     "main": "aurelia-chosen",
+    "format": "amd",
+    "registry": "github",
+    "jspmPackage": true,
     "directories": {
-      "lib": "dist/system"
+      "dist": "dist/amd"
     },
     "dependencies": {
       "aurelia-binding": "npm:aurelia-binding@^1.0.0-beta.1.3.1",
