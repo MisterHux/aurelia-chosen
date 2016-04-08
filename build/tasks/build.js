@@ -19,7 +19,6 @@ var gif = require('gulp-if');
 var jsName = paths.packageName + '.js';
 var indexName = './index.ts';
 
-var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   
 var log = function(file, cb) {
   console.log(file.path);
@@ -46,7 +45,10 @@ gulp.task('build-index', function(){
 });
 
 gulp.task('build-amd', function() {
+  var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["module"] = "amd";
+  typescriptOptions["target"] = "es5";
+
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
@@ -64,7 +66,9 @@ gulp.task('build-amd', function() {
 // by errors from other gulp plugins
 // https://www.npmjs.com/package/gulp-plumber
 gulp.task('build-system', function() {
+  var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["module"] = "system";
+  typescriptOptions["target"] = "es5";
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
@@ -78,7 +82,9 @@ gulp.task('build-system', function() {
 });
 
 gulp.task('build-commonjs', function() {
+  var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["module"] = "commonjs";
+  typescriptOptions["target"] = "es5";
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
@@ -92,7 +98,7 @@ gulp.task('build-commonjs', function() {
 });
 
 gulp.task('build-es6', function() {
-  typescriptOptions = require('../../tsconfig.json').compilerOptions;
+  var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["target"] = "es6";
 
   var es6Compiler = typescript.create(typescriptOptions);
