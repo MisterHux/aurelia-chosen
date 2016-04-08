@@ -5,7 +5,8 @@ import { inject } from 'aurelia-dependency-injection';
 import {DOM} from 'aurelia-pal';
 
 import 'harvesthq/chosen';
-import 'harvesthq/chosen/chosen.min.css!text';
+import 'harvesthq/chosen/chosen.min.css!';
+
 import * as $ from 'jquery'; 
 import * as _ from 'lodash';
 
