@@ -1,6 +1,6 @@
 {
   "name": "aurelia-chosen",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "Custom element for chosenjs, done in Typescript",
   "keywords": [
     "aurelia",
