@@ -2,6 +2,17 @@
 
 Custom element that skins a select to use [chosen](http://harvesthq.github.io/chosen).  This repo is initiall based on the aurelia-skeleton-typescript sample.
 
+## Dependencies
+
+* [aurelia-templating](https://github.com/aurelia/templating)
+* [aurelia-dependency-injection](https://github.com/aurelia/dependency-injection)
+* [aurelia-binding](https://github.com/aurelia/binding)
+* [aurelia-logging](https://github.com/aurelia/logging)
+* [aurelia-pal](https://github.com/aurelia/pal)
+* [chosen](https://github.com/harvesthq/chosen)
+* [jquery](https://github.com/jquery/jquery)
+* [lodash](https://github.com/lodash/lodash)
+
 
 ## Running The App
 

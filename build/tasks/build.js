@@ -48,15 +48,16 @@ gulp.task('build-amd', function() {
   var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["module"] = "amd";
   typescriptOptions["target"] = "es5";
+  typescriptOptions["sourceMap"] = false;
 
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
   return gulp.src(paths.dtsSrc.concat(paths.source))
     .pipe(plumber())
-    .pipe(sourcemaps.init({loadMaps: true}))
+    //.pipe(sourcemaps.init({loadMaps: true}))
     .pipe(typescriptCompiler())
-    .pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
+    //.pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
     .pipe(gif('**/index.js', rename({basename: paths.packageName})))
     .pipe(gulp.dest(paths.output + 'amd'));
 });
@@ -69,14 +70,15 @@ gulp.task('build-system', function() {
   var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["module"] = "system";
   typescriptOptions["target"] = "es5";
+  typescriptOptions["sourceMap"] = false;
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
   return gulp.src(paths.dtsSrc.concat(paths.source))
     .pipe(plumber())
-    .pipe(sourcemaps.init({loadMaps: true}))
+    //.pipe(sourcemaps.init({loadMaps: true}))
     .pipe(typescriptCompiler())
-    .pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
+    //.pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
     .pipe(gif('**/index.js', rename({basename: paths.packageName})))
     .pipe(gulp.dest(paths.output + 'system'));
 });
@@ -85,14 +87,15 @@ gulp.task('build-commonjs', function() {
   var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["module"] = "commonjs";
   typescriptOptions["target"] = "es5";
+  typescriptOptions["sourceMap"] = false;
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
   return gulp.src(paths.dtsSrc.concat(paths.source))
     .pipe(plumber())
-    .pipe(sourcemaps.init({loadMaps: true}))
+    //.pipe(sourcemaps.init({loadMaps: true}))
     .pipe(typescriptCompiler())
-    .pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
+    //.pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
     .pipe(gif('**/index.js', rename({basename: paths.packageName})))
     .pipe(gulp.dest(paths.output + 'commonjs'));
 });
@@ -100,14 +103,15 @@ gulp.task('build-commonjs', function() {
 gulp.task('build-es6', function() {
   var typescriptOptions = require('../../tsconfig.json').compilerOptions;
   typescriptOptions["target"] = "es6";
+  typescriptOptions["sourceMap"] = false;
 
   var es6Compiler = typescript.create(typescriptOptions);
 
   return gulp.src(paths.dtsSrcEs6.concat(paths.source))
     .pipe(plumber())
-    .pipe(sourcemaps.init({loadMaps: true}))
+    //.pipe(sourcemaps.init({loadMaps: true}))
     .pipe(es6Compiler())
-    .pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
+    //.pipe(sourcemaps.write({includeContent: false, sourceRoot: '/src'}))
     .pipe(gif('**/index.js', rename({basename: paths.packageName})))
     .pipe(gulp.dest(paths.output + 'es6'));
 });

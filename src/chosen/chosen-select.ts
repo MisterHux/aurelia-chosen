@@ -32,27 +32,34 @@ export default class ChosenSelect {
   @bindable public disabled: boolean = false;
   // allow the dropdown to be a multi select
   @bindable public multiple : boolean = false;
-  @bindable public noLabel : boolean = false;
   @bindable public valueProperty : string = "id";
   @bindable public displayProperty : string = "name";
   @bindable public disabledProperty : string = "isDisabled";
+  @bindable public groupProperty : string = "optGroup";
+  @bindable public optgroup : boolean = false;
   @bindable public helpText : string = "";
   @bindable public chosenOptions : string;
       
   private logger = LogManager.getLogger("chosen") ;
 
   private _element: HTMLElement;
+  private _bindingContext: Object;
+  private _overrideContext: Object;
   private _bindingEngine: BindingEngine;
   private _select: HTMLSelectElement;
   private _label: HTMLLabelElement;
   private _helpTextLabel: HTMLElement;
   private _chosenObject: any;
   private _optionsSubscription: any;
-  private _clear : boolean = false;
+  private _clear: boolean = false;
+  public _noLabel : boolean = false;
   private _multiple : boolean = false;
+  private _optGroup : boolean = false;
   private _chosenOptions : ChosenOptions = undefined;
   
   private _chosenDefaults : ChosenOptions = undefined;
+
+  @bindable public optionGroups: Array<Object> = new Array<Object>();
   
   constructor(element: HTMLElement, engine : BindingEngine) {
     this._element = element;
@@ -65,13 +72,25 @@ export default class ChosenSelect {
     if (!this.name && this.id) {
       this.name = this.id;
     }
+  }
+
+  public bind(bindingContext: any, overrideContext: any) {
+    this.logger.debug('bind');
+    this._bindingContext = bindingContext;
+    this._overrideContext = overrideContext;
     
     this.disabled = this._element.hasAttribute('disabled') || this.isTruthy(this.disabled);
     this.readonly = this._element.hasAttribute('readonly') || this.isTruthy(this.readonly);
     this.inlineForm = this._element.hasAttribute('inlineForm') || this.isTruthy(this.inlineForm);
     this._multiple = this._element.hasAttribute('multiple') || this.isTruthy(this.multiple);
+    this._optGroup = this._element.hasAttribute('optgroup') || this.isTruthy(this.optgroup);
 
     this._clear = this._element.hasAttribute('clear');
+    this._noLabel = this._element.hasAttribute('noLabel'); 
+    if (this._noLabel === true) {
+      // if the noLabel option is set, but the label field has a value, then default to showing the label.
+      this._noLabel = this.label === '';
+    }
         
     this._chosenDefaults = {
       no_results_text: "Oops, nothing found!",
@@ -84,21 +103,28 @@ export default class ChosenSelect {
     };
 
     this._chosenOptions = this.parseChosenOptions(this._chosenDefaults);
-  }
 
-  public bind() {
-    this.logger.debug('bind');
     if (this.value !== null && this.value !== undefined) {
       this.valueChanged(this.value);
     }
+
     if (this.chosenOptions !== undefined && this.chosenOptions !== '') {
       var passedOptions = this.parseChosenOptions(this.chosenOptions);
       _.extend(this._chosenOptions, passedOptions);
     }
+
+    if (this._optGroup) {
+      this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+      this.optionGroups
+    } else {
+      this.optionGroups = this.options;
+    }
+    
   }
 
   public attached() {
     this.logger.debug('attached');
+
     let jQuerySelect = $(this._select);
 
     if (this.value !== undefined) {
@@ -245,4 +271,32 @@ export default class ChosenSelect {
     this._element.dispatchEvent(changeEvent);
   }
 
+}
+
+export class FilterOnPropertyValueConverter {
+  toView(array: {}[], property: string, exp: string) {
+    if (array === undefined || array === null || property === undefined || exp === undefined) {
+      return array;
+    }
+    if (exp.startsWith("!")) {
+      // filtering here on the off chance that an item was added without the group property, still want it added to then end of list.
+      // not the most efficent.
+      return array.filter((item) => {
+        // if not the !property, then return true only if the item doesn't have the group value.
+        let itemProp = item[property];
+        let returnValue = (itemProp !== undefined && itemProp !== null) === false;
+        return returnValue;
+      });
+    } else {
+      return array.filter((item) => {
+        // if the item doesn't have the property return false.
+        let itemProp = item[property];
+        let returnValue = false;
+        if (itemProp !== undefined && itemProp !== null) {
+          returnValue = item[property].toLowerCase() === exp.toLocaleLowerCase();
+        } 
+        return returnValue;
+      });   
+    }
+  }
 }
