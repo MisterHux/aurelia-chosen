@@ -12,6 +12,7 @@
                   disabled.bind="option[disabledProperty]!==null&&option[disabledProperty]!==undefined&&option[disabledProperty]" 
                   value="${option[valueProperty]!==null&&option[valueProperty]!==undefined?option[valueProperty]:option}">${option[displayProperty] || option}</option>
           </optgroup>
+          <!-- This is so that items that don't have the a "group" key will show here -->
           <option model.bind="option" 
                   repeat.for="option of options | filterOnProperty: groupProperty: '!'"
                   disabled.bind="option[disabledProperty]!==null&&option[disabledProperty]!==undefined&&option[disabledProperty]" 
