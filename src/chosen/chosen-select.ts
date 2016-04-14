@@ -15,7 +15,8 @@ import * as _ from 'lodash';
 export default class ChosenSelect {
   @bindable public id : string = '';
   @bindable public name : string = '';
-  @bindable public label : string = '';
+
+  @bindable public label: string = '';
   
   //@bindable({ defaultBindingMode: bindingMode.twoWay })
   @bindable public options : Array<Object> = new Array<Object>();
@@ -53,6 +54,7 @@ export default class ChosenSelect {
   private _optionsSubscription: any;
   private _clear: boolean = false;
   public _noLabel : boolean = false;
+  public _noHelpText : boolean = false;
   private _multiple : boolean = false;
   private _optGroup : boolean = false;
   private _chosenOptions : ChosenOptions = undefined;
@@ -87,6 +89,7 @@ export default class ChosenSelect {
 
     this._clear = this._element.hasAttribute('clear');
     this._noLabel = this._element.hasAttribute('noLabel'); 
+    this._noHelpText = this.helpText === ''; 
     if (this._noLabel === true) {
       // if the noLabel option is set, but the label field has a value, then default to showing the label.
       this._noLabel = this.label === '';
@@ -115,7 +118,6 @@ export default class ChosenSelect {
 
     if (this._optGroup) {
       this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
-      this.optionGroups
     } else {
       this.optionGroups = this.options;
     }
@@ -156,22 +158,106 @@ export default class ChosenSelect {
       this.changeChosenPlaceholderText(waitingText, waitingText, waitingText);
       
       this._chosenObject.attr("disabled", "disabled");
-      this._chosenObject.trigger("liszt:updated");
-      this._chosenObject.trigger("chosen:updated");
+      this.triggerChosenReDraw(10);
     }
   }
 
-  public valueChanged(newValue : any) {
+  public detached() {
+    this.logger.debug('detached');
+    this._optionsSubscription.dispose();
+    this._chosenObject.chosen('destroy').off('change');
+  }
+
+  private valueChanged(newValue : any, oldValue?: any) : void {
     this.logger.debug('valueChanged');
     if (this._chosenObject !== undefined && this._multiple) {
-      setTimeout(() => {
-        this._chosenObject.trigger("liszt:updated");;
-        this._chosenObject.trigger("chosen:updated");
-      }, 100);
+      this.triggerChosenReDraw();
     }
   }
 
-  public optionsChanged() {
+  private readonlyChanged(newValue: boolean, oldValue: boolean) : void {
+    if (newValue !== oldValue) {
+      this.logger.debug('readonlyChanged');
+      if (newValue === true) {
+        this._chosenObject.attr("readonly", true);
+      } else {
+        this._chosenObject.removeAttr("readonly")
+      }
+
+      this.triggerChosenReDraw();
+    }
+  }
+
+  private disabledChanged(newValue: boolean, oldValue: boolean) : void {
+    if (newValue !== oldValue) {
+      this.logger.debug('disabledChanged');
+      if (newValue === true) {
+        this._chosenObject.attr("disabled", true);
+      } else {
+        this._chosenObject.removeAttr("disabled")
+      }
+
+      this.triggerChosenReDraw();
+    }
+  }
+
+  private displayPropertyChanged(newValue: string, oldValue: string) : void {
+    if (newValue !== oldValue) {
+      this.triggerChosenReDraw();
+    }
+  }  
+
+  private valuePropertyChanged(newValue: string, oldValue: string) : void {
+    if (newValue !== oldValue) {
+      this.triggerChosenReDraw();
+    }
+  }  
+
+  private disabledPropertyChanged(newValue: string, oldValue: string) : void {
+    if (newValue !== oldValue) {
+      this.triggerChosenReDraw();
+    }
+  }  
+
+  private groupPropertyChanged(newValue: string, oldValue: string) : void {
+    if (newValue !== oldValue) {
+      if (this._optGroup) {
+        this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+      } else {
+        this.optionGroups = this.options;
+      }
+      this.triggerChosenReDraw();
+    }
+  }  
+
+  private optgroupChanged(newValue: boolean, oldValue: boolean) : void {
+    if (newValue !== oldValue) {
+      this._optGroup = newValue;
+      if ((this._optGroup) && (this.isNullOrEmpty(this.groupProperty) === false)) {
+        this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+      } else {
+        this.optionGroups = this.options;
+      }
+      this.triggerChosenReDraw();
+    }
+  }
+
+  private omultipleChanged(newValue: boolean, oldValue: boolean) : void {
+    if (newValue !== oldValue) {
+      this._multiple = newValue;
+      
+      this.triggerChosenReDraw();
+    }
+  }  
+
+  private placeholderChanged(newValue: string, oldValue: string) : void {
+    if (newValue !== oldValue) {
+      this.changeChosenPlaceholderText(newValue, newValue, newValue);
+      this.triggerChosenReDraw();
+    }
+  }  
+
+  private optionsChanged() {
     this.logger.debug('optionsChanged');
     // when this was in the constructor it wasn't correctly setting the observer, make sure that a subscription is set
     this._optionsSubscription = this._bindingEngine.collectionObserver(this.options).subscribe(splices => this.someOptionsChanged(splices));
@@ -186,10 +272,7 @@ export default class ChosenSelect {
 
       this.changeChosenPlaceholderText(selectedItemText, this._chosenOptions.placeholder_text_single, this._chosenOptions.placeholder_text_multiple);
     
-      setTimeout(() => {
-        this._chosenObject.trigger("liszt:updated");;
-        this._chosenObject.trigger("chosen:updated");
-      }, 100);
+      this.triggerChosenReDraw();
     } 
   }
 
@@ -208,6 +291,13 @@ export default class ChosenSelect {
       }
     }
   }
+
+  private triggerChosenReDraw = (delay: number = 100): void => {
+    setTimeout(() => {
+      this._chosenObject.trigger("liszt:updated");
+      this._chosenObject.trigger("chosen:updated");
+    }, delay);
+  }
   
   private someOptionsChanged = (splices: any): void  => {
     // make sure that the chosen list is updated when the underlying data is changed.
@@ -215,39 +305,35 @@ export default class ChosenSelect {
     this.logger.debug('someOptionsChanged');
     
     if (this._chosenObject !== undefined) {
-      setTimeout(() => {
-        this._chosenObject.trigger("liszt:updated");;
-        this._chosenObject.trigger("chosen:updated");
-      }, 100);
+      this.triggerChosenReDraw();
     }
   }
   
-  public detached() {
-      this.logger.debug('detached');
-      this._optionsSubscription.dispose();
-      this._chosenObject.chosen('destroy').off('change');
-  }
 
-  private parseChosenOptions(options : string | Object) : ChosenOptions {
-    var chosenOptions : ChosenOptions = {};
-      var parsedData : Object;
-      if (typeof options === "string") {
-        try {
-          parsedData = JSON.parse(options);
-        } catch (exception) {
-          var fixedJson = options.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');  
-          parsedData = JSON.parse("{" + fixedJson + "}");
-        }
-      } else {
-        parsedData = options;
+  private parseChosenOptions = (options : string | Object) : ChosenOptions => {
+    let chosenOptions : ChosenOptions = {};
+    let parsedData : Object;
+    if (typeof options === "string") {
+      try {
+        parsedData = JSON.parse(options);
+      } catch (exception) {
+        var fixedJson = options.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');  
+        parsedData = JSON.parse("{" + fixedJson + "}");
       }
-      Object.assign(chosenOptions, parsedData);
-      return chosenOptions;
+    } else {
+      parsedData = options;
+    }
+    Object.assign(chosenOptions, parsedData);
+    return chosenOptions;
   }
 
-  public isTruthy = function(b: any): boolean {
-      return (/^(true|yes|1|y|on)$/i).test(b);
+  private isTruthy = (toTest: any): boolean => {
+      return (/^(true|yes|1|y|on)$/i).test(toTest);
   };
+
+  private isNullOrEmpty = (toTest: string): boolean => {
+    return ((toTest === undefined) || (toTest === null) || (toTest === ''));
+  }
 
   private onSelectionChangeEvent = (event: any) : void => {
     let changeEvent;

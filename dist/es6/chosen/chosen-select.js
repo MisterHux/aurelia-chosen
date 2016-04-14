@@ -30,6 +30,7 @@ define(["require", "exports", 'aurelia-templating', 'aurelia-binding', 'aurelia-
             this.logger = LogManager.getLogger("chosen");
             this._clear = false;
             this._noLabel = false;
+            this._noHelpText = false;
             this._multiple = false;
             this._optGroup = false;
             this._chosenOptions = undefined;
@@ -51,18 +52,41 @@ define(["require", "exports", 'aurelia-templating', 'aurelia-binding', 'aurelia-
                     }
                 }
             };
+            this.triggerChosenReDraw = (delay = 100) => {
+                setTimeout(() => {
+                    this._chosenObject.trigger("liszt:updated");
+                    this._chosenObject.trigger("chosen:updated");
+                }, delay);
+            };
             this.someOptionsChanged = (splices) => {
                 this.logger.debug('someOptionsChanged');
                 if (this._chosenObject !== undefined) {
-                    setTimeout(() => {
-                        this._chosenObject.trigger("liszt:updated");
-                        ;
-                        this._chosenObject.trigger("chosen:updated");
-                    }, 100);
+                    this.triggerChosenReDraw();
                 }
             };
-            this.isTruthy = function (b) {
-                return (/^(true|yes|1|y|on)$/i).test(b);
+            this.parseChosenOptions = (options) => {
+                let chosenOptions = {};
+                let parsedData;
+                if (typeof options === "string") {
+                    try {
+                        parsedData = JSON.parse(options);
+                    }
+                    catch (exception) {
+                        var fixedJson = options.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');
+                        parsedData = JSON.parse("{" + fixedJson + "}");
+                    }
+                }
+                else {
+                    parsedData = options;
+                }
+                Object.assign(chosenOptions, parsedData);
+                return chosenOptions;
+            };
+            this.isTruthy = (toTest) => {
+                return (/^(true|yes|1|y|on)$/i).test(toTest);
+            };
+            this.isNullOrEmpty = (toTest) => {
+                return ((toTest === undefined) || (toTest === null) || (toTest === ''));
             };
             this.onSelectionChangeEvent = (event) => {
                 let changeEvent;
@@ -103,6 +127,7 @@ define(["require", "exports", 'aurelia-templating', 'aurelia-binding', 'aurelia-
             this._optGroup = this._element.hasAttribute('optgroup') || this.isTruthy(this.optgroup);
             this._clear = this._element.hasAttribute('clear');
             this._noLabel = this._element.hasAttribute('noLabel');
+            this._noHelpText = this.helpText === '';
             if (this._noLabel === true) {
                 this._noLabel = this.label === '';
             }
@@ -125,7 +150,6 @@ define(["require", "exports", 'aurelia-templating', 'aurelia-binding', 'aurelia-
             }
             if (this._optGroup) {
                 this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
-                this.optionGroups;
             }
             else {
                 this.optionGroups = this.options;
@@ -155,18 +179,92 @@ define(["require", "exports", 'aurelia-templating', 'aurelia-binding', 'aurelia-
                 var waitingText = 'Please wait, gathering values';
                 this.changeChosenPlaceholderText(waitingText, waitingText, waitingText);
                 this._chosenObject.attr("disabled", "disabled");
-                this._chosenObject.trigger("liszt:updated");
-                this._chosenObject.trigger("chosen:updated");
+                this.triggerChosenReDraw(10);
             }
         }
-        valueChanged(newValue) {
+        detached() {
+            this.logger.debug('detached');
+            this._optionsSubscription.dispose();
+            this._chosenObject.chosen('destroy').off('change');
+        }
+        valueChanged(newValue, oldValue) {
             this.logger.debug('valueChanged');
             if (this._chosenObject !== undefined && this._multiple) {
-                setTimeout(() => {
-                    this._chosenObject.trigger("liszt:updated");
-                    ;
-                    this._chosenObject.trigger("chosen:updated");
-                }, 100);
+                this.triggerChosenReDraw();
+            }
+        }
+        readonlyChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this.logger.debug('readonlyChanged');
+                if (newValue === true) {
+                    this._chosenObject.attr("readonly", true);
+                }
+                else {
+                    this._chosenObject.removeAttr("readonly");
+                }
+                this.triggerChosenReDraw();
+            }
+        }
+        disabledChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this.logger.debug('disabledChanged');
+                if (newValue === true) {
+                    this._chosenObject.attr("disabled", true);
+                }
+                else {
+                    this._chosenObject.removeAttr("disabled");
+                }
+                this.triggerChosenReDraw();
+            }
+        }
+        displayPropertyChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this.triggerChosenReDraw();
+            }
+        }
+        valuePropertyChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this.triggerChosenReDraw();
+            }
+        }
+        disabledPropertyChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this.triggerChosenReDraw();
+            }
+        }
+        groupPropertyChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                if (this._optGroup) {
+                    this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+                }
+                else {
+                    this.optionGroups = this.options;
+                }
+                this.triggerChosenReDraw();
+            }
+        }
+        optgroupChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this._optGroup = newValue;
+                if ((this._optGroup) && (this.isNullOrEmpty(this.groupProperty) === false)) {
+                    this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+                }
+                else {
+                    this.optionGroups = this.options;
+                }
+                this.triggerChosenReDraw();
+            }
+        }
+        omultipleChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this._multiple = newValue;
+                this.triggerChosenReDraw();
+            }
+        }
+        placeholderChanged(newValue, oldValue) {
+            if (newValue !== oldValue) {
+                this.changeChosenPlaceholderText(newValue, newValue, newValue);
+                this.triggerChosenReDraw();
             }
         }
         optionsChanged() {
@@ -178,35 +276,8 @@ define(["require", "exports", 'aurelia-templating', 'aurelia-binding', 'aurelia-
                 }
                 var selectedItemText = this.placeholder !== "" ? this.placeholder : "Select an Option";
                 this.changeChosenPlaceholderText(selectedItemText, this._chosenOptions.placeholder_text_single, this._chosenOptions.placeholder_text_multiple);
-                setTimeout(() => {
-                    this._chosenObject.trigger("liszt:updated");
-                    ;
-                    this._chosenObject.trigger("chosen:updated");
-                }, 100);
+                this.triggerChosenReDraw();
             }
-        }
-        detached() {
-            this.logger.debug('detached');
-            this._optionsSubscription.dispose();
-            this._chosenObject.chosen('destroy').off('change');
-        }
-        parseChosenOptions(options) {
-            var chosenOptions = {};
-            var parsedData;
-            if (typeof options === "string") {
-                try {
-                    parsedData = JSON.parse(options);
-                }
-                catch (exception) {
-                    var fixedJson = options.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');
-                    parsedData = JSON.parse("{" + fixedJson + "}");
-                }
-            }
-            else {
-                parsedData = options;
-            }
-            Object.assign(chosenOptions, parsedData);
-            return chosenOptions;
         }
     };
     __decorate([

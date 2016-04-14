@@ -39,6 +39,7 @@ var ChosenSelect = (function () {
         this.logger = LogManager.getLogger("chosen");
         this._clear = false;
         this._noLabel = false;
+        this._noHelpText = false;
         this._multiple = false;
         this._optGroup = false;
         this._chosenOptions = undefined;
@@ -60,18 +61,42 @@ var ChosenSelect = (function () {
                 }
             }
         };
+        this.triggerChosenReDraw = function (delay) {
+            if (delay === void 0) { delay = 100; }
+            setTimeout(function () {
+                _this._chosenObject.trigger("liszt:updated");
+                _this._chosenObject.trigger("chosen:updated");
+            }, delay);
+        };
         this.someOptionsChanged = function (splices) {
             _this.logger.debug('someOptionsChanged');
             if (_this._chosenObject !== undefined) {
-                setTimeout(function () {
-                    _this._chosenObject.trigger("liszt:updated");
-                    ;
-                    _this._chosenObject.trigger("chosen:updated");
-                }, 100);
+                _this.triggerChosenReDraw();
             }
         };
-        this.isTruthy = function (b) {
-            return (/^(true|yes|1|y|on)$/i).test(b);
+        this.parseChosenOptions = function (options) {
+            var chosenOptions = {};
+            var parsedData;
+            if (typeof options === "string") {
+                try {
+                    parsedData = JSON.parse(options);
+                }
+                catch (exception) {
+                    var fixedJson = options.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');
+                    parsedData = JSON.parse("{" + fixedJson + "}");
+                }
+            }
+            else {
+                parsedData = options;
+            }
+            Object.assign(chosenOptions, parsedData);
+            return chosenOptions;
+        };
+        this.isTruthy = function (toTest) {
+            return (/^(true|yes|1|y|on)$/i).test(toTest);
+        };
+        this.isNullOrEmpty = function (toTest) {
+            return ((toTest === undefined) || (toTest === null) || (toTest === ''));
         };
         this.onSelectionChangeEvent = function (event) {
             var changeEvent;
@@ -112,6 +137,7 @@ var ChosenSelect = (function () {
         this._optGroup = this._element.hasAttribute('optgroup') || this.isTruthy(this.optgroup);
         this._clear = this._element.hasAttribute('clear');
         this._noLabel = this._element.hasAttribute('noLabel');
+        this._noHelpText = this.helpText === '';
         if (this._noLabel === true) {
             this._noLabel = this.label === '';
         }
@@ -134,7 +160,6 @@ var ChosenSelect = (function () {
         }
         if (this._optGroup) {
             this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
-            this.optionGroups;
         }
         else {
             this.optionGroups = this.options;
@@ -165,19 +190,92 @@ var ChosenSelect = (function () {
             var waitingText = 'Please wait, gathering values';
             this.changeChosenPlaceholderText(waitingText, waitingText, waitingText);
             this._chosenObject.attr("disabled", "disabled");
-            this._chosenObject.trigger("liszt:updated");
-            this._chosenObject.trigger("chosen:updated");
+            this.triggerChosenReDraw(10);
         }
     };
-    ChosenSelect.prototype.valueChanged = function (newValue) {
-        var _this = this;
+    ChosenSelect.prototype.detached = function () {
+        this.logger.debug('detached');
+        this._optionsSubscription.dispose();
+        this._chosenObject.chosen('destroy').off('change');
+    };
+    ChosenSelect.prototype.valueChanged = function (newValue, oldValue) {
         this.logger.debug('valueChanged');
         if (this._chosenObject !== undefined && this._multiple) {
-            setTimeout(function () {
-                _this._chosenObject.trigger("liszt:updated");
-                ;
-                _this._chosenObject.trigger("chosen:updated");
-            }, 100);
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.readonlyChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this.logger.debug('readonlyChanged');
+            if (newValue === true) {
+                this._chosenObject.attr("readonly", true);
+            }
+            else {
+                this._chosenObject.removeAttr("readonly");
+            }
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.disabledChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this.logger.debug('disabledChanged');
+            if (newValue === true) {
+                this._chosenObject.attr("disabled", true);
+            }
+            else {
+                this._chosenObject.removeAttr("disabled");
+            }
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.displayPropertyChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.valuePropertyChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.disabledPropertyChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.groupPropertyChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            if (this._optGroup) {
+                this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+            }
+            else {
+                this.optionGroups = this.options;
+            }
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.optgroupChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this._optGroup = newValue;
+            if ((this._optGroup) && (this.isNullOrEmpty(this.groupProperty) === false)) {
+                this.optionGroups = _.uniq(_.map(this.options, this.groupProperty));
+            }
+            else {
+                this.optionGroups = this.options;
+            }
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.omultipleChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this._multiple = newValue;
+            this.triggerChosenReDraw();
+        }
+    };
+    ChosenSelect.prototype.placeholderChanged = function (newValue, oldValue) {
+        if (newValue !== oldValue) {
+            this.changeChosenPlaceholderText(newValue, newValue, newValue);
+            this.triggerChosenReDraw();
         }
     };
     ChosenSelect.prototype.optionsChanged = function () {
@@ -190,35 +288,8 @@ var ChosenSelect = (function () {
             }
             var selectedItemText = this.placeholder !== "" ? this.placeholder : "Select an Option";
             this.changeChosenPlaceholderText(selectedItemText, this._chosenOptions.placeholder_text_single, this._chosenOptions.placeholder_text_multiple);
-            setTimeout(function () {
-                _this._chosenObject.trigger("liszt:updated");
-                ;
-                _this._chosenObject.trigger("chosen:updated");
-            }, 100);
+            this.triggerChosenReDraw();
         }
-    };
-    ChosenSelect.prototype.detached = function () {
-        this.logger.debug('detached');
-        this._optionsSubscription.dispose();
-        this._chosenObject.chosen('destroy').off('change');
-    };
-    ChosenSelect.prototype.parseChosenOptions = function (options) {
-        var chosenOptions = {};
-        var parsedData;
-        if (typeof options === "string") {
-            try {
-                parsedData = JSON.parse(options);
-            }
-            catch (exception) {
-                var fixedJson = options.replace(/(['"])?([a-z0-9A-Z_]+)(['"])?:/g, '"$2": ');
-                parsedData = JSON.parse("{" + fixedJson + "}");
-            }
-        }
-        else {
-            parsedData = options;
-        }
-        Object.assign(chosenOptions, parsedData);
-        return chosenOptions;
     };
     __decorate([
         aurelia_templating_1.bindable, 

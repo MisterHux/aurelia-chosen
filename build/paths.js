@@ -6,11 +6,13 @@ var outputRoot = 'dist/';
 var exporSrvtRoot = 'export/'
 
 var pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+var entryFileName = pkg.name + '.js';
 
 
 module.exports = {
   root: appRoot,
   source: appRoot + '**/*.ts',
+  tsd: appRoot + pkg.name + '.d.ts',
   html: appRoot + '**/*.html',
   css: appRoot + '**/*.css',
   style: 'styles/**/*.css',
@@ -30,6 +32,7 @@ module.exports = {
     './custom_typings/chosen.d.ts',
     './jspm_packages/**/*.d.ts'
   ],
+  entryFileName: entryFileName,
   packageName: pkg.name,
   packageVersion: pkg.version
 }

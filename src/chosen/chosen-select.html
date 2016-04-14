@@ -1,7 +1,7 @@
 <template ref-id="${id}">
   <div class="row ${inlineForm ? 'form-inline' : ''}" style="margin-top: 5px">
     <label ref="_label" class="control-label chosen-label ${labelClasses}" innerhtml.bind="label" if.bind="!_noLabel" for="${id}"></label>
-    <div class="form-group" css="width: ${inlineForm ? '50' : '100'}%">
+    <div class="form-group" css="width: ${inlineForm ? '75' : '100'}%">
       <select ref="_select" id.bind="id" name.bind="name" style="width: 100%" aria-describedby="helpBlock" placeholder="${placeholder}" value.bind="value">
         <option value="" if.bind="!_multiple"></option>
         <template if.bind="_optGroup" containerless>
@@ -26,6 +26,6 @@
         </template>
       </select>
     </div>
-    <span class="help-block" ref="_helpTextLabel" if.bind="helpText" innerhtml.bind="helpText" id="helpBlock"></span>
+    <span class="help-block" ref="_helpTextLabel" if.bind="!_noHelpText" innerhtml.bind="helpText" id="helpBlock"></span>
   </div>
 </template>

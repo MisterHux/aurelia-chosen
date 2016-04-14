@@ -49,7 +49,7 @@ gulp.task('build-amd', function() {
   typescriptOptions["module"] = "amd";
   typescriptOptions["target"] = "es5";
   typescriptOptions["sourceMap"] = false;
-
+  //typescriptOptions["declaration"] = true;
 
   var typescriptCompiler = typescript.create(typescriptOptions);
 
@@ -133,6 +133,15 @@ gulp.task('build-css', function() {
     .pipe(gulp.dest(paths.output));
 });
 
+gulp.task('copy-dts', function() {
+  return gulp.src(paths.tsd)
+      .pipe(gulp.dest(paths.output + 'es6'))
+      .pipe(gulp.dest(paths.output + 'commonjs'))
+      .pipe(gulp.dest(paths.output + 'amd'))
+      .pipe(gulp.dest(paths.output + 'system'));
+});
+
+
 // this task calls the clean task (located
 // in ./clean.js), then runs the build-system
 // and build-html tasks in parallel
@@ -141,7 +150,7 @@ gulp.task('build', function(callback) {
   return runSequence(
     'clean',
     'build-index',
-    ['build-es6', 'build-commonjs', 'build-amd', 'build-system', 'build-html', 'build-css'],
+    ['build-es6', 'build-commonjs', 'build-amd', 'build-system', 'build-html', 'build-css', 'copy-dts'],
     callback
   );
 });
